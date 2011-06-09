@@ -19,7 +19,7 @@ class UserForm(forms.Form):
     def clean_username(self):
         username = self.cleaned_data.get('username')
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username__iexact=username)
         except User.DoesNotExist:
             return username
         else:
