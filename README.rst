@@ -112,7 +112,11 @@ Other Information
 If you don't wish your users to be redirected to the setup view to create a username but rather have
 a random username generated for them, set ``SOCIALREGISTRATION_GENERATE_USERNAME`` in your settings file to ``True``.
 
+If you want good logs of what is going on, configure logging according to _django_logging_docs. If you want it to log into a bucket other than the default of ``socialregistration`` set SOCIALREGISTRATION_LOGGER_NAME in your settings file to the desired logger name.
+
+
 .. _django: http://code.djangoproject.com/
 .. _oauth2: https://github.com/simplegeo/python-oauth2
 .. _python-openid: https://github.com/openid/python-openid
 .. _python-sdk: https://github.com/facebook/python-sdk
+.. _django_logging_docs: https://docs.djangoproject.com/en/1.3/topics/logging/
