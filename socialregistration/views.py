@@ -363,8 +363,9 @@ def twitter(request, account_inactive_template='socialregistration/account_inact
 
         login(request, user)
 
-    logger.info("Falling back, redirecting user to %s" % _get_next(request))
-    return HttpResponseRedirect(_get_next(request))
+    next_url = _get_next(request)  # IF the next url is coming from session, the method removes it and makes the next call default to the profile view. So the log reads right, but the user goes to the wrong place.
+    logger.info("Falling back, redirecting user to %s" % next_url)
+    return HttpResponseRedirect(next_url)
 
 def get_object(info):
     if 'a' and 'm' in info:
