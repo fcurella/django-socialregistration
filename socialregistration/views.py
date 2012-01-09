@@ -31,7 +31,7 @@ FB_ERROR = _('We couldn\'t validate your Facebook credentials')
 
 GENERATE_USERNAME = bool(getattr(settings, 'SOCIALREGISTRATION_GENERATE_USERNAME', False))
 
-logger = logging.getlogger(getattr(settings, 'SOCIALREGISTRATION_LOGGER_NAME', 'socialregistration'))
+logger = logging.getLogger(getattr(settings, 'SOCIALREGISTRATION_LOGGER_NAME', 'socialregistration'))
 
 
 def post_disconnect_redirect_url(instance, request=None):
