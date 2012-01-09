@@ -230,14 +230,14 @@ def facebook_connect(request, template='socialregistration/facebook.html',
             try:
                 # get the profile for this facebook UID and connected object
                 profile = FacebookProfile.objects.get(uid=request.facebook.uid, content_type=ContentType.objects.get_for_model(connect_object.__class__), object_id=connect_object.pk)
-                profile.consumer_key = request.facebook.user['access_token']
-                profile.secret = request.facebook.user['secret']
+                profile.consumer_key = request.facebook.user.get('access_token')
+                profile.secret = request.facebook.user.get('secret', '')
                 profile.save()
-                logger.info("Found and updated consumer key (%s) / secret (%s) for Facebook Profile of object %s" % (request.facebook.user['access_token'], request.facebook.user['secret'], connect_object))
+                logger.info("Found and updated consumer key (%s) / secret (%s) for Facebook Profile of object %s" % (request.facebook.user.get('access_token'), request.facebook.user.get('secret', ''), connect_object))
             except FacebookProfile.DoesNotExist:
-                logger.info("No Facebook Profile found. Creating Facebook Profile for %s. Facebook UID is %s, consumer key %s and secret %s" % (connect_object, request.facebook.uid, request.facebook.user['access_token'], request.facebook.user['secret']))
+                logger.info("No Facebook Profile found. Creating Facebook Profile for %s. Facebook UID is %s, access token %s" % (connect_object, request.facebook.uid, request.facebook.user.get('access_token')))
                 FacebookProfile.objects.create(content_object=connect_object, uid=request.facebook.uid, \
-                    consumer_key=request.facebook.user['access_token'], consumer_secret=request.facebook.user['secret'])
+                    consumer_key=request.facebook.user.get('access_token'), consumer_secret=request.facebook.user.get('secret', ''))
         else:
             logger.debug("No connect object was specified, so we're linking to the currently logged in user.")
             if request.facebook.uid is None or request.user.is_authenticated() is False:
@@ -249,14 +249,13 @@ def facebook_connect(request, template='socialregistration/facebook.html',
 
             try:
                 profile = FacebookProfile.objects.get(uid=request.facebook.uid, content_type=ContentType.objects.get_for_model(User))
-                profile.consumer_key = request.facebook.user['access_token']
-                profile.secret = request.facebook.user['secret']
+                profile.consumer_key = request.facebook.user.get('access_token')
+                profile.secret = request.facebook.user.get('secret', '')
                 profile.save()
-                logger.info("Found and updated consumer key (%s) / secret (%s) for Facebook Profile of user %s" % (request.facebook.user['access_token'], request.facebook.user['secret'], request.user))
+                logger.info("Found and updated consumer key (%s) / secret (%s) for Facebook Profile of user %s" % (request.facebook.user.get('access_token'), request.facebook.user.get('secret', ''), request.user))
             except FacebookProfile.DoesNotExist:
-                logger.info("No Facebook Profile found. Creating Facebook Profile for %s. Facebook UID is %s, consumer key %s and secret %s" % (request.user, request.facebook.uid, request.facebook.user['access_token'], request.facebook.user['secret']))
-                profile = FacebookProfile.objects.create(content_object=request.user,
-                    uid=request.facebook.uid, consumer_key=request.facebook.user['access_token'], consumer_secret=request.facebook.user['secret'])
+                logger.info("No Facebook Profile found. Creating Facebook Profile for %s. Facebook UID is %s, access token %s" % (connect_object, request.facebook.uid, request.facebook.user.get('access_token')))
+                profile = FacebookProfile.objects.create(content_object=request.user, uid=request.facebook.uid, consumer_key=request.facebook.user.get('access_token'), consumer_secret=request.facebook.user.get('secret', ''))
     else:
         logger.info("The user did not authorize connecting Facebook.")
         messages.info(request, "You must authorize the Facebook application in order to link your account.")
