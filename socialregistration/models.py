@@ -7,69 +7,60 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.sites.models import Site 
 
-from socialregistration.managers import FacebookProfileManager, TwitterProfileManager, OpenIDProfileManager
+from socialregistration.managers import SocialProfileManager
 
-class FacebookProfile(models.Model):
+class BaseSocialProfile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-
     site = models.ForeignKey(Site, default=Site.objects.get_current)
-    uid = models.CharField(max_length=255, blank=False, null=False)
-    consumer_key = models.CharField('AKA access_token', max_length=128)
-    consumer_secret = models.CharField('AKA secret', max_length=128)
 
-    objects = FacebookProfileManager()
+    objects = SocialProfileManager()
 
-    def __unicode__(self):
-        return u'%s: %s' % (self.content_object, self.uid)
+    @property
+    def remote_id(self):
+        return getattr(self, self.remote_id_field)
 
     def authenticate(self):
-        return authenticate(uid=self.uid)
+        return authenticate(**{self.remote_id_field: self.remote_id})
 
     def get_disconnect_url(self):
         return reverse('disconnect', kwargs={'network': ContentType.objects.get_for_model(self.__class__).pk, 'object_type': self.content_type.pk, 'object_id': self.object_id})
 
-class TwitterProfile(models.Model):
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    class Meta:
+        abstract = True
 
-    site = models.ForeignKey(Site, default=Site.objects.get_current)
+class FacebookProfile(BaseSocialProfile):
+    uid = models.CharField(max_length=255, blank=False, null=False)
+    consumer_key = models.CharField('AKA access_token', max_length=128)
+    consumer_secret = models.CharField('AKA secret', max_length=128)
+
+    remote_id_field = 'uid'
+
+    def __unicode__(self):
+        return u'%s: %s' % (self.content_object, self.uid)
+
+
+class TwitterProfile(BaseSocialProfile):
     twitter_id = models.PositiveIntegerField()
     screenname = models.CharField(max_length=40, null=True)
     consumer_key = models.CharField(max_length=128)
     consumer_secret = models.CharField(max_length=128)
 
-    objects = TwitterProfileManager()
+    remote_id_field = 'twitter_id'
 
     def __unicode__(self):
         return u'%s: %s' % (self.content_object, self.twitter_id)
 
-    def authenticate(self):
-        return authenticate(twitter_id=self.twitter_id)
 
-    def get_disconnect_url(self):
-        return reverse('disconnect', kwargs={'network': ContentType.objects.get_for_model(self.__class__).pk, 'object_type': self.content_type.pk, 'object_id': self.object_id})
-
-class OpenIDProfile(models.Model):
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
-
-    site = models.ForeignKey(Site, default=Site.objects.get_current)
+class OpenIDProfile(BaseSocialProfile):
     identity = models.TextField()
 
-    objects = OpenIDProfileManager()
+    remote_id_field = 'identity'
 
     def __unicode__(self):
         return u'OpenID Profile for %s, via provider %s' % (self.content_object, self.identity)
 
-    def authenticate(self):
-        return authenticate(identity=self.identity)
-
-    def get_disconnect_url(self):
-        return reverse('disconnect', kwargs={'network': ContentType.objects.get_for_model(self.__class__).pk, 'object_type': self.content_type.pk, 'object_id': self.object_id})
 
 class OpenIDStore(models.Model):
     site = models.ForeignKey(Site, default=Site.objects.get_current)
