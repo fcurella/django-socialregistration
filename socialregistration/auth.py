@@ -14,35 +14,22 @@ class Auth(object):
         except User.DoesNotExist:
             return None
 
-class FacebookAuth(Auth):
-    def authenticate(self, uid=None):
-        try:
-            return FacebookProfile.objects.get(
-                uid=uid,
-                site=Site.objects.get_current(),
-                content_type=ContentType.objects.get_for_model(User),
-            ).content_object
-        except FacebookProfile.DoesNotExist:
+    def authenticate(self, **kwargs):
+        remote_id = kwargs.get(self.model.remote_id_field)
+        if not remote_id or len(kwargs) != 1:
             return None
+        try:
+            return self.model.objects.by_remote_id(remote_id).filter(
+                content_type=ContentType.objects.get_for_model(User),
+            ).get().content_object
+        except self.model.DoesNotExist:
+            return None
+
+class FacebookAuth(Auth):
+    model = FacebookProfile
 
 class TwitterAuth(Auth):
-    def authenticate(self, twitter_id=None):
-        try:
-            return TwitterProfile.objects.get(
-                twitter_id=twitter_id,
-                site=Site.objects.get_current(),
-                content_type=ContentType.objects.get_for_model(User),
-            ).content_object
-        except TwitterProfile.DoesNotExist:
-            return None
+    model = TwitterProfile
 
 class OpenIDAuth(Auth):
-    def authenticate(self, identity=None):
-        try:
-            return OpenIDProfile.objects.get(
-                identity=identity,
-                site=Site.objects.get_current(),
-                content_type=ContentType.objects.get_for_model(User),
-            ).content_object
-        except OpenIDProfile.DoesNotExist:
-            return None
+    model = OpenIDProfile
